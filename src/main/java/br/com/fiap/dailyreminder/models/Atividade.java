@@ -14,6 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Atividade {
     
+    private Long id;
     private int duracao;
     private LocalDate data;
     private String atividade;
