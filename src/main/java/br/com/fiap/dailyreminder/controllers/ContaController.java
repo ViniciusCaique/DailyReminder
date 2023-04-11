@@ -23,45 +23,41 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.dailyreminder.exceptions.RestNotFoundException;
 import br.com.fiap.dailyreminder.models.Atividade;
+import br.com.fiap.dailyreminder.models.Conta;
 import br.com.fiap.dailyreminder.models.RestValidationError;
-import br.com.fiap.dailyreminder.repository.AtividadeRepository;
-import br.com.fiap.dailyreminder.repository.LembreteRepository;
+import br.com.fiap.dailyreminder.repository.ContaRepository;
 import jakarta.validation.Valid;
 
 import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("/api/atividades")
-public class AtividadeController {
+@RequestMapping("/api/contas")
+public class ContaController {
     
-    Logger log = LoggerFactory.getLogger(AtividadeController.class);
+    Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    AtividadeRepository atividadeRepository;
-
-    @Autowired
-    LembreteRepository lembreteRepository;
+    ContaRepository repository;
 
     @GetMapping
-    public List<Atividade> index(){
-        return atividadeRepository.findAll();
+    public List<Conta> index(){
+        return repository.findAll();
     }
 
     @PostMapping
-    public ResponseEntity<Object> create(@RequestBody @Valid Atividade atividade){
-        log.info("cadastrando atividade " + atividade);
-        atividadeRepository.save(atividade);
-        atividade.setLembrete(lembreteRepository.findById(atividade.getLembrete().getId()).get());
-        return ResponseEntity.status(HttpStatus.CREATED).body(atividade);
+    public ResponseEntity<Object> create(@RequestBody @Valid Conta conta){
+        log.info("cadastrando conta " + conta);
+        repository.save(conta);
+        return ResponseEntity.status(HttpStatus.CREATED).body(conta);
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Atividade> show(@PathVariable long id) {
+    public ResponseEntity<Conta> show(@PathVariable long id) {
         log.info("detalhando atividade " + id);
         // var atividadeEncontrada = atividades.stream().filter(a -> a.getId().equals(id)).findFirst();
 
-        var atividade = atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
+        var atividade = getConta(id);
 
         // if (atividadeEncontrada.isEmpty()){
         //     // return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -71,7 +67,7 @@ public class AtividadeController {
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Atividade> update(@PathVariable long id, @Valid @RequestBody Atividade atividade) {
+    public ResponseEntity<Conta> update(@PathVariable long id, @Valid @RequestBody Conta conta) {
         log.info("atualizando atividade " + id);
         // var atividadeEncontrada = atividades.stream().filter(a -> a.getId().equals(id)).findFirst();
         
@@ -82,17 +78,17 @@ public class AtividadeController {
         //     return ResponseEntity.notFound().build();
         // }
 
-        atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
+        getConta(id);
 
-        atividade.setId(id);
-        atividadeRepository.save(atividade);
+        conta.setId(id);
+        repository.save(conta);
 
-        return ResponseEntity.ok(atividade);
+        return ResponseEntity.ok(conta);
     }
 
     @DeleteMapping("{id}")
-    public ResponseEntity<Atividade> delete(@PathVariable long id) {
-        log.info("apagando atividade " + id);
+    public ResponseEntity<Conta> delete(@PathVariable long id) {
+        log.info("apagando conta " + id);
         // var atividadeEncontrada = atividades.stream().filter(a -> a.getId().equals(id)).findFirst();
 
         // var atividadeEncontrada = repository.findById(id);
@@ -101,11 +97,18 @@ public class AtividadeController {
         //     return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         // }
 
-        var atividade = atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, atividade nao encontrada!"));
-
-        atividadeRepository.delete(atividade); 
+        // var atividade = getConta(id);
+        //  da pra fazer assim e passar o nome da variavel no delete()
+        var conta = getConta(id);
+        conta.setAtiva(false);
+        repository.save(conta);
+        repository.delete(getConta(id)); 
 
         // return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
         return ResponseEntity.noContent().build();
+    }
+
+    private Conta getConta(long id) {
+        return repository.findById(id).orElseThrow(() -> new RestNotFoundException("Conta nao encontrada"));
     }
 }
