@@ -7,22 +7,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 
-import br.com.fiap.dailyreminder.models.Conta;
-import br.com.fiap.dailyreminder.repository.ContaRepository;
+import br.com.fiap.dailyreminder.models.Lembrete;
+import br.com.fiap.dailyreminder.repository.LembreteRepository;
 
 @Configuration
 public class DatabaseSeeder implements CommandLineRunner {
 
     @Autowired
-    ContaRepository contaRepository;
+    LembreteRepository lembreteRepository;
 
 
     @Override
     public void run(String... args) throws Exception {
-        contaRepository.saveAll(List.of(
-            new Conta(1L, "itau", new BigDecimal(100), "money", true),
-            new Conta(2L, "banco do brasil", new BigDecimal(55), "money", true),
-            new Conta(3L, "bradesco", new BigDecimal(150), "coin", true)
+        lembreteRepository.saveAll(List.of(
+            new Lembrete(1L, "Estudar java", 60),
+            new Lembrete(2L, "Estudar javascript", 60),
+            new Lembrete(3L, "Treinar costas", 60)
             ));
         // atividade repository
     }
