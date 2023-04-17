@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,6 +27,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @ToString
 @NoArgsConstructor
+@Builder
 @Entity
 public class Atividade {
     
@@ -40,11 +42,7 @@ public class Atividade {
     @NotNull
     private LocalDate data;
 
-    // @NotNull Nao Pode ser nulo
-    // @NotEmpty Nao pode estar vazio
-    // @NotBlank Nao pode ter apenas espacos e o size, para ter um minimo
-
-    @NotBlank @Size(min = 5, max = 255)
+    @NotBlank @Size(min = 3, max = 255)
     private String atividade;
 
     @ManyToOne

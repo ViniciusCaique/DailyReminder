@@ -7,6 +7,9 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -33,80 +36,42 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 @RequestMapping("/api/lembretes")
 public class LembreteController {
-    
-    Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
-    LembreteRepository repository;
+    LembreteRepository lembreteRepository;
 
     @GetMapping
-    public List<Lembrete> index(){
-        return repository.findAll();
+    public Page<Lembrete> index(@RequestParam(required = false) String busca, @PageableDefault(size = 5) Pageable pageable){
+        return lembreteRepository.findAll(pageable);
     }
 
     @PostMapping
     public ResponseEntity<Object> create(@RequestBody @Valid Lembrete lembrete){
-        log.info("cadastrando lembrete " + lembrete);
-        repository.save(lembrete);
+
+        lembreteRepository.save(lembrete);
         return ResponseEntity.status(HttpStatus.CREATED).body(lembrete);
     }
 
     @GetMapping("{id}")
     public ResponseEntity<Lembrete> show(@PathVariable long id) {
-        log.info("detalhando lembrete " + id);
-        // var atividadeEncontrada = atividades.stream().filter(a -> a.getId().equals(id)).findFirst();
-
-        var lembrete = getLembrete(id);
-
-        // if (atividadeEncontrada.isEmpty()){
-        //     // return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        //     return ResponseEntity.notFound().build();
-        // }
+        var lembrete = lembreteRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Lembrete nao encontrada"));
         return ResponseEntity.ok(lembrete);
     }
 
     @PutMapping("{id}")
     public ResponseEntity<Lembrete> update(@PathVariable long id, @Valid @RequestBody Lembrete lembrete) {
-        log.info("atualizando lembrete " + id);
-        // var atividadeEncontrada = atividades.stream().filter(a -> a.getId().equals(id)).findFirst();
-        
-        // var atividadeEncontrada = repository.findById(id);
 
-        // if (atividadeEncontrada.isEmpty()){
-        //     // return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        //     return ResponseEntity.notFound().build();
-        // }
-
-        getLembrete(id);
-
+        lembreteRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, lembrete nao encontrada!"));
         lembrete.setId(id);
-        repository.save(lembrete);
-
+        lembreteRepository.save(lembrete);
         return ResponseEntity.ok(lembrete);
     }
 
     @DeleteMapping("{id}")
     public ResponseEntity<Lembrete> delete(@PathVariable long id) {
-        log.info("apagando lembrete " + id);
-        // var atividadeEncontrada = atividades.stream().filter(a -> a.getId().equals(id)).findFirst();
 
-        // var atividadeEncontrada = repository.findById(id);
-
-        // if (atividadeEncontrada.isEmpty()){
-        //     return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        // }
-
-        // var atividade = getConta(id);
-        //  da pra fazer assim e passar o nome da variavel no delete()
-        var lembrete = getLembrete(id);
-        repository.save(lembrete);
-        repository.delete(getLembrete(id)); 
-
-        // return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        var lembrete = lembreteRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, lembrete nao encontrada!"));
+        lembreteRepository.delete(lembrete); 
         return ResponseEntity.noContent().build();
-    }
-
-    private Lembrete getLembrete(long id) {
-        return repository.findById(id).orElseThrow(() -> new RestNotFoundException("Conta nao encontrada"));
     }
 }
