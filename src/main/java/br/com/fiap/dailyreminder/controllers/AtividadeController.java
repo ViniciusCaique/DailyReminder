@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -46,12 +49,17 @@ public class AtividadeController {
     @Autowired
     LembreteRepository lembreteRepository;
 
+    @Autowired
+    PagedResourcesAssembler<Object> assembler;
+
     @GetMapping
-    public Page<Atividade> index(@RequestParam(required = false) String busca, @PageableDefault(size = 10) Pageable pageable){
-        if(busca == null){
-            return atividadeRepository.findAll(pageable);
-        }
-        return atividadeRepository.findByAtividadeContaining(busca, pageable);
+    public PagedModel<EntityModel<Object>> index(@RequestParam(required = false) String busca, @PageableDefault(size = 10) Pageable pageable){
+
+        Page<Atividade> atividades = (busca == null) ? 
+            atividadeRepository.findAll(pageable) : 
+            atividadeRepository.findByAtividadeContaining(busca, pageable);
+            
+        return assembler.toModel(atividades.map(Atividade::toEntityModel));
     }
 
     @PostMapping
@@ -62,17 +70,17 @@ public class AtividadeController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Atividade> show(@PathVariable long id) {
+    public EntityModel<Atividade> show(@PathVariable long id) {
         var atividade = atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
-        return ResponseEntity.ok(atividade);
+        return atividade.toEntityModel();
     }
 
     @PutMapping("{id}")
-    public ResponseEntity<Atividade> update(@PathVariable long id, @Valid @RequestBody Atividade atividade) {
+    public EntityModel<Atividade> update(@PathVariable long id, @Valid @RequestBody Atividade atividade) {
         atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
         atividade.setId(id);
         atividadeRepository.save(atividade);
-        return ResponseEntity.ok(atividade);
+        return atividade.toEntityModel();
     }
 
     @DeleteMapping("{id}")
