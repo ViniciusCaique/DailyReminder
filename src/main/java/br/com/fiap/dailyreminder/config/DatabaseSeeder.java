@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Configuration;
 
 import br.com.fiap.dailyreminder.models.Atividade;
 import br.com.fiap.dailyreminder.models.Lembrete;
+import br.com.fiap.dailyreminder.models.Usuario;
 import br.com.fiap.dailyreminder.repository.AtividadeRepository;
 import br.com.fiap.dailyreminder.repository.LembreteRepository;
+import br.com.fiap.dailyreminder.repository.UsuarioRepository;
 
 @Configuration
 public class DatabaseSeeder implements CommandLineRunner {
@@ -21,6 +23,9 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     @Autowired
     AtividadeRepository atividadeRepository;
+
+    @Autowired
+    UsuarioRepository usuarioRepository;
 
 
     @Override
@@ -45,6 +50,13 @@ public class DatabaseSeeder implements CommandLineRunner {
             Atividade.builder().duracao(120).data(LocalDate.now()).atividade("ver serie").lembrete(l6).build(),
             Atividade.builder().duracao(180).data(LocalDate.now()).atividade("ver filme").build(),
             Atividade.builder().duracao(150).data(LocalDate.now()).atividade("jogar").lembrete(l7).build()
-        )); 
+        ));
+
+        usuarioRepository.save(Usuario.builder()
+        .nome("Vinicius")
+        .email("vinicius@gmail.com")
+        .senha("$2a$12$xjbVbyBNGfeRN9dmHJ34/uwdhmc00XfYw3qY9sKSg4jEkB4Zwg72a")
+        .build()
+    );
     }
 }
