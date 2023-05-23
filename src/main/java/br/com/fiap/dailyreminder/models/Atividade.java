@@ -3,11 +3,9 @@ package br.com.fiap.dailyreminder.models;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
-import java.math.BigDecimal;
+
 import java.sql.Date;
-import java.sql.Timestamp;
 import java.time.LocalDate;
-import java.util.ArrayList;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.domain.Pageable;
@@ -19,11 +17,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

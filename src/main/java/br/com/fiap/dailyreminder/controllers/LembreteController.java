@@ -30,10 +30,18 @@ import br.com.fiap.dailyreminder.models.RestValidationError;
 import br.com.fiap.dailyreminder.repository.LembreteRepository;
 import jakarta.validation.Valid;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
+@SecurityRequirement(name = "bearer-key")
+@Tag(name = "lembretes")
 @RequestMapping("/api/lembretes")
 public class LembreteController {
 
@@ -41,11 +49,29 @@ public class LembreteController {
     LembreteRepository lembreteRepository;
 
     @GetMapping
+    @Operation(
+        summary = "Detalhar lembretes.",
+        description = "Endpoint que retorna todos os lembretes." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "lembrete retornado com sucesso"),
+        @ApiResponse(responseCode = "204", description = "sem conteudo"),
+        @ApiResponse(responseCode = "400", description = "ma requisicao"),
+        @ApiResponse(responseCode = "404", description = "lembrete com id informado inexistente")
+    })
     public Page<Lembrete> index(@RequestParam(required = false) String busca, @PageableDefault(size = 5) Pageable pageable){
         return lembreteRepository.findAll(pageable);
     }
 
     @PostMapping
+    @Operation(
+        summary = "Cadastrar lembrete.",
+        description = "Endpoint que recebe os parametros de lembrete e cria os dados de um lembrete." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "lembrete cadastrado com sucesso"),
+        @ApiResponse(responseCode = "400", description = "os campos enviados sao invalidos")
+    })
     public ResponseEntity<Object> create(@RequestBody @Valid Lembrete lembrete){
 
         lembreteRepository.save(lembrete);
@@ -53,12 +79,30 @@ public class LembreteController {
     }
 
     @GetMapping("{id}")
+    @Operation(
+        summary = "Detalhar lembrete.",
+        description = "Endpoint que recebe um id e retorna os dados de um lembrete." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "lembrete retornado com sucesso"),
+        @ApiResponse(responseCode = "204", description = "sem conteudo"),
+        @ApiResponse(responseCode = "404", description = "lembrete com id informado inexistente")
+    })
     public ResponseEntity<Lembrete> show(@PathVariable long id) {
         var lembrete = lembreteRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Lembrete nao encontrada"));
         return ResponseEntity.ok(lembrete);
     }
 
     @PutMapping("{id}")
+    @Operation(
+        summary = "Atualizar lembrete.",
+        description = "Endpoint que recebe os parametros de um lembrete e atualiza os dados de um lembrete." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "lembrete atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "nao existe lembrete com o id informado"),
+        @ApiResponse(responseCode = "406", description = "dado informado errado")
+    })
     public ResponseEntity<Lembrete> update(@PathVariable long id, @Valid @RequestBody Lembrete lembrete) {
 
         lembreteRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, lembrete nao encontrada!"));
@@ -68,6 +112,14 @@ public class LembreteController {
     }
 
     @DeleteMapping("{id}")
+    @Operation(
+        summary = "Deletar Lembrete.",
+        description = "Endpoint que recebe um id e deleta um lembrete." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "sem conteudo/deletado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "nao existe lembrete com o id informado")
+    })
     public ResponseEntity<Lembrete> delete(@PathVariable long id) {
 
         var lembrete = lembreteRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, lembrete nao encontrada!"));

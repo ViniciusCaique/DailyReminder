@@ -50,16 +50,30 @@ public class AtividadeController {
     PagedResourcesAssembler<Object> assembler;
 
     @GetMapping
+    @Operation(
+        summary = "Detalhar atividades.",
+        description = "Endpoint que retorna todas as atividades ou uma lista especifica baseado na busca." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
+        @ApiResponse(responseCode = "204", description = "sem conteudo"),
+        @ApiResponse(responseCode = "400", description = "ma requisicao"),
+        @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
+    })
     public PagedModel<EntityModel<Object>> index(@RequestParam(required = false) String busca, @ParameterObject @PageableDefault(size = 10) Pageable pageable){
 
         Page<Atividade> atividades = (busca == null) ? 
             atividadeRepository.findAll(pageable) : 
             atividadeRepository.findByAtividadeContaining(busca, pageable);
-            
+  
         return assembler.toModel(atividades.map(Atividade::toEntityModel));
     }
 
     @PostMapping
+    @Operation(
+        summary = "Cadastrar atividade.",
+        description = "Endpoint que recebe os parametros de atividade e cria os dados de uma atividade." 
+    )
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "atividade cadastrada com sucesso"),
         @ApiResponse(responseCode = "400", description = "os campos enviados sao invalidos")
@@ -75,12 +89,26 @@ public class AtividadeController {
         summary = "Detalhar atividade.",
         description = "Endpoint que recebe um id e retorna os dados de uma atividade." 
     )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
+        @ApiResponse(responseCode = "204", description = "sem conteudo"),
+        @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
+    })
     public EntityModel<Atividade> show(@PathVariable long id) {
         var atividade = atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
         return atividade.toEntityModel();
     }
 
     @PutMapping("{id}")
+    @Operation(
+        summary = "Atualizar atividade.",
+        description = "Endpoint que recebe os parametros de atividade e atualiza os dados de uma atividade." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "atividade atualizada com sucesso"),
+        @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado"),
+        @ApiResponse(responseCode = "406", description = "dado informado errado")
+    })
     public EntityModel<Atividade> update(@PathVariable long id, @Valid @RequestBody Atividade atividade) {
         atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
         atividade.setId(id);
@@ -89,6 +117,14 @@ public class AtividadeController {
     }
 
     @DeleteMapping("{id}")
+    @Operation(
+        summary = "Deletar atividade.",
+        description = "Endpoint que recebe um id e deleta uma atividade." 
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "sem conteudo/deletada com sucesso"),
+        @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado")
+    })
     public ResponseEntity<Atividade> delete(@PathVariable long id) {
         var atividade = atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, atividade nao encontrada!"));
         atividadeRepository.delete(atividade); 
