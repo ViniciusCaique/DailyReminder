@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import br.com.fiap.dailyreminder.models.Atividade;
 import br.com.fiap.dailyreminder.models.Lembrete;
@@ -15,6 +16,7 @@ import br.com.fiap.dailyreminder.repository.LembreteRepository;
 import br.com.fiap.dailyreminder.repository.UsuarioRepository;
 
 @Configuration
+@Profile("dev")
 public class DatabaseSeeder implements CommandLineRunner {
 
     @Autowired
