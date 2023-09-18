@@ -79,7 +79,7 @@ public class Atividade {
             return EntityModel.of(
                 this,
                 linkTo(methodOn(AtividadeController.class).show(id)).withSelfRel(),
-                linkTo(methodOn(AtividadeController.class).index(null, Pageable.unpaged())).withRel("all"),
+                // linkTo(methodOn(AtividadeController.class).index(null, Pageable.unpaged())).withRel("all"),
                 linkTo(methodOn(AtividadeController.class).show(id)).withRel("delete")
             );
     }
