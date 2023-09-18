@@ -41,14 +41,14 @@ public class DatabaseSeeder implements CommandLineRunner {
         ));
 
         atividadeRepository.saveAll(List.of(
-            Atividade.builder().duracao(60).data(LocalDate.now()).atividade("estudar").lembrete(l1).build(),
-            Atividade.builder().duracao(30).data(LocalDate.now()).atividade("treinar").lembrete(l3).build(),
-            Atividade.builder().duracao(50).data(LocalDate.now()).atividade("ler").lembrete(l5).build(),
-            Atividade.builder().duracao(20).data(LocalDate.now()).atividade("correr").build(),
-            Atividade.builder().duracao(10).data(LocalDate.now()).atividade("passear com cachorro").build(),
-            Atividade.builder().duracao(120).data(LocalDate.now()).atividade("ver serie").lembrete(l6).build(),
-            Atividade.builder().duracao(180).data(LocalDate.now()).atividade("ver filme").build(),
-            Atividade.builder().duracao(150).data(LocalDate.now()).atividade("jogar").lembrete(l7).build()
+            Atividade.builder().duracao(60).dataDia(LocalDate.now()).atividade("estudar").lembrete(l1).build(),
+            Atividade.builder().duracao(30).dataDia(LocalDate.now()).atividade("treinar").lembrete(l3).build(),
+            Atividade.builder().duracao(50).dataDia(LocalDate.now()).atividade("ler").lembrete(l5).build(),
+            Atividade.builder().duracao(20).dataDia(LocalDate.now()).atividade("correr").build(),
+            Atividade.builder().duracao(10).dataDia(LocalDate.now()).atividade("passear com cachorro").build(),
+            Atividade.builder().duracao(120).dataDia(LocalDate.now()).atividade("ver serie").lembrete(l6).build(),
+            Atividade.builder().duracao(180).dataDia(LocalDate.now()).atividade("ver filme").build(),
+            Atividade.builder().duracao(150).dataDia(LocalDate.now()).atividade("jogar").lembrete(l7).build()
         ));
 
         usuarioRepository.save(Usuario.builder()

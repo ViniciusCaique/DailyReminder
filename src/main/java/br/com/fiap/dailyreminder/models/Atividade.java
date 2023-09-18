@@ -47,7 +47,7 @@ public class Atividade {
     private int duracao;
 
     @NotNull
-    private LocalDate data;
+    private LocalDate dataDia;
 
     @NotBlank @Size(min = 3, max = 255)
     private String atividade;
@@ -59,23 +59,29 @@ public class Atividade {
     private Lembrete lembrete;
 
     public EntityModel<Atividade> toEntityModel(){
-        if(this.getLembrete() != null) {
-            return EntityModel.of(
-                this,
-                linkTo(methodOn(AtividadeController.class).show(id)).withSelfRel(),
-                linkTo(methodOn(AtividadeController.class).index(null, Pageable.unpaged())).withRel("all"),
-                linkTo(methodOn(AtividadeController.class).show(this.getLembrete().getId())).withRel("lembrete"),
-                linkTo(methodOn(AtividadeController.class).show(id)).withRel("delete")
-            );
-        } else {
-            return EntityModel.of(
-                this,
-                linkTo(methodOn(AtividadeController.class).show(id)).withSelfRel(),
-                linkTo(methodOn(AtividadeController.class).index(null, Pageable.unpaged())).withRel("all"),
-                linkTo(methodOn(AtividadeController.class).show(id)).withRel("delete")
-            );
-        }
+        // if(this.getLembrete() != null) {
+        //     return EntityModel.of(
+        //         this,
+        //         linkTo(methodOn(AtividadeController.class).show(id)).withSelfRel(),
+        //         linkTo(methodOn(AtividadeController.class).index(null, Pageable.unpaged())).withRel("all"),
+        //         // linkTo(methodOn(AtividadeController.class).show(this.getLembrete().getId())).withRel("lembrete"),
+        //         linkTo(methodOn(AtividadeController.class).show(id)).withRel("delete")
+        //     );
+        // } else {
+        //     return EntityModel.of(
+        //         this,
+        //         linkTo(methodOn(AtividadeController.class).show(id)).withSelfRel(),
+        //         linkTo(methodOn(AtividadeController.class).index(null, Pageable.unpaged())).withRel("all"),
+        //         linkTo(methodOn(AtividadeController.class).show(id)).withRel("delete")
+        //     );
+        // }
 
+            return EntityModel.of(
+                this,
+                linkTo(methodOn(AtividadeController.class).show(id)).withSelfRel(),
+                linkTo(methodOn(AtividadeController.class).index(null, Pageable.unpaged())).withRel("all"),
+                linkTo(methodOn(AtividadeController.class).show(id)).withRel("delete")
+            );
     }
 
 }

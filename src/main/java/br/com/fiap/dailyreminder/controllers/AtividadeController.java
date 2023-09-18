@@ -1,5 +1,7 @@
 package br.com.fiap.dailyreminder.controllers;
 
+import java.util.List;
+
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -49,24 +51,29 @@ public class AtividadeController {
     @Autowired
     PagedResourcesAssembler<Object> assembler;
 
-    @GetMapping
-    @Operation(
-        summary = "Detalhar atividades.",
-        description = "Endpoint que retorna todas as atividades ou uma lista especifica baseado na busca." 
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
-        @ApiResponse(responseCode = "204", description = "sem conteudo"),
-        @ApiResponse(responseCode = "400", description = "ma requisicao"),
-        @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
-    })
-    public PagedModel<EntityModel<Object>> index(@RequestParam(required = false) String busca, @ParameterObject @PageableDefault(size = 10) Pageable pageable){
+    // @GetMapping
+    // @Operation(
+    //     summary = "Detalhar atividades.",
+    //     description = "Endpoint que retorna todas as atividades ou uma lista especifica baseado na busca." 
+    // )
+    // @ApiResponses({
+    //     @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
+    //     @ApiResponse(responseCode = "204", description = "sem conteudo"),
+    //     @ApiResponse(responseCode = "400", description = "ma requisicao"),
+    //     @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
+    // })
+    // public PagedModel<EntityModel<Object>> index(@RequestParam(required = false) String busca, @ParameterObject @PageableDefault(size = 10) Pageable pageable){
 
-        Page<Atividade> atividades = (busca == null) ? 
-            atividadeRepository.findAll(pageable) : 
-            atividadeRepository.findByAtividadeContaining(busca, pageable);
+    //     Page<Atividade> atividades = (busca == null) ? 
+    //         atividadeRepository.findAll(pageable) : 
+    //         atividadeRepository.findByAtividadeContaining(busca, pageable);
   
-        return assembler.toModel(atividades.map(Atividade::toEntityModel));
+    //     return assembler.toModel(atividades.map(Atividade::toEntityModel));
+    // }
+
+    @GetMapping
+    public List<Atividade> index(){
+        return atividadeRepository.findAll();
     }
 
     @PostMapping
@@ -80,7 +87,7 @@ public class AtividadeController {
     })
     public ResponseEntity<Object> create(@RequestBody @Valid Atividade atividade){
         atividadeRepository.save(atividade);
-        atividade.setLembrete(lembreteRepository.findById(atividade.getLembrete().getId()).get());
+        // atividade.setLembrete(lembreteRepository.findById(atividade.getLembrete().getId()).get());
         return ResponseEntity.status(HttpStatus.CREATED).body(atividade);
     }
 
