@@ -1,15 +1,13 @@
-package br.com.fiap.dailyreminder.controllers;
+package br.com.fiap.dailyreminder.modules.activities.infrastructure.controllers;
 
 import java.util.List;
+import java.util.UUID;
 
-import org.springdoc.core.annotations.ParameterObject;
+import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
+import br.com.fiap.dailyreminder.modules.activities.infrastructure.repositories.ActivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,12 +17,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.dailyreminder.exceptions.RestNotFoundException;
-import br.com.fiap.dailyreminder.models.Atividade;
-import br.com.fiap.dailyreminder.repository.AtividadeRepository;
 import br.com.fiap.dailyreminder.repository.LembreteRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -40,10 +35,10 @@ import lombok.extern.slf4j.Slf4j;
 @SecurityRequirement(name = "bearer-key")
 @Tag(name = "atividades")
 @RequestMapping("/api/atividades")
-public class AtividadeController {
+public class ActivityController {
 
     @Autowired
-    AtividadeRepository atividadeRepository;
+    ActivityRepository activityRepository;
 
     @Autowired
     LembreteRepository lembreteRepository;
@@ -72,8 +67,8 @@ public class AtividadeController {
     // }
 
     @GetMapping
-    public List<Atividade> index(){
-        return atividadeRepository.findAll();
+    public List<Activity> index(){
+        return activityRepository.findAll();
     }
 
     @PostMapping
@@ -85,8 +80,8 @@ public class AtividadeController {
         @ApiResponse(responseCode = "201", description = "atividade cadastrada com sucesso"),
         @ApiResponse(responseCode = "400", description = "os campos enviados sao invalidos")
     })
-    public ResponseEntity<Object> create(@RequestBody @Valid Atividade atividade){
-        atividadeRepository.save(atividade);
+    public ResponseEntity<Object> create(@RequestBody @Valid Activity atividade){
+        activityRepository.save(atividade);
         // atividade.setLembrete(lembreteRepository.findById(atividade.getLembrete().getId()).get());
         return ResponseEntity.status(HttpStatus.CREATED).body(atividade);
     }
@@ -101,9 +96,9 @@ public class AtividadeController {
         @ApiResponse(responseCode = "204", description = "sem conteudo"),
         @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
     })
-    public EntityModel<Atividade> show(@PathVariable long id) {
-        var atividade = atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
-        return atividade.toEntityModel();
+    public EntityModel<Activity> show(@PathVariable UUID id) {
+        var activity = activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
+        return activity.toEntityModel();
     }
 
     @PutMapping("{id}")
@@ -116,11 +111,11 @@ public class AtividadeController {
         @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado"),
         @ApiResponse(responseCode = "406", description = "dado informado errado")
     })
-    public EntityModel<Atividade> update(@PathVariable long id, @Valid @RequestBody Atividade atividade) {
-        atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
-        atividade.setId(id);
-        atividadeRepository.save(atividade);
-        return atividade.toEntityModel();
+    public EntityModel<Activity> update(@PathVariable UUID id, @Valid @RequestBody Activity activity) {
+        activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
+        activity.setId(id);
+        activityRepository.save(activity);
+        return activity.toEntityModel();
     }
 
     @DeleteMapping("{id}")
@@ -132,9 +127,9 @@ public class AtividadeController {
         @ApiResponse(responseCode = "204", description = "sem conteudo/deletada com sucesso"),
         @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado")
     })
-    public ResponseEntity<Atividade> delete(@PathVariable long id) {
-        var atividade = atividadeRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, atividade nao encontrada!"));
-        atividadeRepository.delete(atividade); 
+    public ResponseEntity<Activity> delete(@PathVariable UUID id) {
+        var activity = activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, atividade nao encontrada!"));
+        activityRepository.delete(activity);
         return ResponseEntity.noContent().build();
     }
 }

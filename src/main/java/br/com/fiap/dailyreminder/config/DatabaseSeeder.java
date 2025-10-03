@@ -3,15 +3,16 @@ package br.com.fiap.dailyreminder.config;
 import java.time.LocalDate;
 import java.util.List;
 
+import br.com.fiap.dailyreminder.modules.activities.infrastructure.repositories.ActivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import br.com.fiap.dailyreminder.models.Atividade;
+import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
 import br.com.fiap.dailyreminder.models.Lembrete;
 import br.com.fiap.dailyreminder.models.Usuario;
-import br.com.fiap.dailyreminder.repository.AtividadeRepository;
+
 import br.com.fiap.dailyreminder.repository.LembreteRepository;
 import br.com.fiap.dailyreminder.repository.UsuarioRepository;
 
@@ -23,7 +24,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     LembreteRepository lembreteRepository;
 
     @Autowired
-    AtividadeRepository atividadeRepository;
+    ActivityRepository activityRepository;
 
     @Autowired
     UsuarioRepository usuarioRepository;
@@ -42,15 +43,15 @@ public class DatabaseSeeder implements CommandLineRunner {
             l1, l2, l3, l4, l5, l6, l7
         ));
 
-        atividadeRepository.saveAll(List.of(
-            Atividade.builder().duracao(60).dataDia(LocalDate.now()).atividade("estudar").lembrete(l1).build(),
-            Atividade.builder().duracao(30).dataDia(LocalDate.now()).atividade("treinar").lembrete(l3).build(),
-            Atividade.builder().duracao(50).dataDia(LocalDate.now()).atividade("ler").lembrete(l5).build(),
-            Atividade.builder().duracao(20).dataDia(LocalDate.now()).atividade("correr").build(),
-            Atividade.builder().duracao(10).dataDia(LocalDate.now()).atividade("passear com cachorro").build(),
-            Atividade.builder().duracao(120).dataDia(LocalDate.now()).atividade("ver serie").lembrete(l6).build(),
-            Atividade.builder().duracao(180).dataDia(LocalDate.now()).atividade("ver filme").build(),
-            Atividade.builder().duracao(150).dataDia(LocalDate.now()).atividade("jogar").lembrete(l7).build()
+        activityRepository.saveAll(List.of(
+            Activity.builder().duracao(60).dataDia(LocalDate.now()).name("estudar").lembrete(l1).build(),
+            Activity.builder().duracao(30).dataDia(LocalDate.now()).name("treinar").lembrete(l3).build(),
+            Activity.builder().duracao(50).dataDia(LocalDate.now()).name("ler").lembrete(l5).build(),
+            Activity.builder().duracao(20).dataDia(LocalDate.now()).name("correr").build(),
+            Activity.builder().duracao(10).dataDia(LocalDate.now()).name("passear com cachorro").build(),
+            Activity.builder().duracao(120).dataDia(LocalDate.now()).name("ver serie").lembrete(l6).build(),
+            Activity.builder().duracao(180).dataDia(LocalDate.now()).name("ver filme").build(),
+            Activity.builder().duracao(150).dataDia(LocalDate.now()).name("jogar").lembrete(l7).build()
         ));
 
         usuarioRepository.save(Usuario.builder()
