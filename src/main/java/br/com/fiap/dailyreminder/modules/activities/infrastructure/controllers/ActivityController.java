@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.dailyreminder.exceptions.RestNotFoundException;
-import br.com.fiap.dailyreminder.repository.LembreteRepository;
+import br.com.fiap.dailyreminder.repository.NotesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -33,15 +33,15 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 @SecurityRequirement(name = "bearer-key")
-@Tag(name = "atividades")
-@RequestMapping("/api/atividades")
+@Tag(name = "Activities")
+@RequestMapping("/api/activities")
 public class ActivityController {
 
     @Autowired
     ActivityRepository activityRepository;
 
     @Autowired
-    LembreteRepository lembreteRepository;
+    NotesRepository notesRepository;
 
     @Autowired
     PagedResourcesAssembler<Object> assembler;
@@ -98,6 +98,8 @@ public class ActivityController {
     })
     public EntityModel<Activity> show(@PathVariable UUID id) {
         var activity = activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
+
+        System.out.println(activity);
         return activity.toEntityModel();
     }
 

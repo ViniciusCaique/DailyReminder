@@ -4,6 +4,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Date;
@@ -11,6 +12,7 @@ import java.util.UUID;
 
 import br.com.fiap.dailyreminder.models.Lembrete;
 import jakarta.persistence.*;
+
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.hateoas.EntityModel;
@@ -31,6 +33,7 @@ import jakarta.validation.constraints.Size;
 @Table(name = "tb_activity")
 public class Activity implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
     
     @Id
@@ -39,7 +42,7 @@ public class Activity implements Serializable {
 
     @Min(value = 0, message = "Nao existe tempo negativo!") 
     @NotNull
-    private int duracao;
+    private int duration;
 
     @NotNull
     private LocalDate dataDia;

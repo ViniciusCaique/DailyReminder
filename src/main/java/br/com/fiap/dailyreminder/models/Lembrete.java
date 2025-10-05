@@ -15,23 +15,26 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "tb_notes")
-public class Lembrete {
+public class Lembrete implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    private String mensagem;
+    private String message;
 
-    
-    @Min(value = 0, message = "Nao existe tempo negativo!") 
-    @NotNull
-    private int duracao;
+//    @Min(value = 0, message = "Nao existe tempo negativo!")
+    private int duration;
 
     public EntityModel<Lembrete> toEntityModel() {
         return EntityModel.of(
