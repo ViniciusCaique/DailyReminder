@@ -4,8 +4,10 @@ import java.io.Serial;
 import java.io.Serializable;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
+import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;

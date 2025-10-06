@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import br.com.fiap.dailyreminder.models.Lembrete;
+import br.com.fiap.dailyreminder.modules.users.domain.User;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -55,6 +56,10 @@ public class Activity implements Serializable {
 
     @ManyToOne
     private Lembrete lembrete;
+
+    @Column(name = "userId", nullable = false)
+    private UUID userId;
+
 
     public EntityModel<Activity> toEntityModel(){
         // if(this.getLembrete() != null) {

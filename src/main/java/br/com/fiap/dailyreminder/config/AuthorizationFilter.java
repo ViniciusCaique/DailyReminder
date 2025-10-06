@@ -30,13 +30,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
 
       var token = getTokenFromHeader(request);
 
-      System.out.println(token);
-
       if (token != null) {
         var decodedToken = tokenJwtService.validate(token);
-
-        System.out.println(decodedToken.getSubject());
-
 
         if (decodedToken == null) {
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -46,10 +41,8 @@ public class AuthorizationFilter extends OncePerRequestFilter {
         request.setAttribute("user_id", decodedToken.getSubject());
 
         UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(decodedToken.getSubject(), null, Collections.emptyList());
+
         SecurityContextHolder.getContext().setAuthentication(auth);
-
-        System.out.println(auth);
-
 
 //        if (token != null) {
 //            var usuario = tokenJwtService.validate(token);
