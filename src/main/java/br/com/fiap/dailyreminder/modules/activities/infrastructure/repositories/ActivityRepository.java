@@ -6,12 +6,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface ActivityRepository extends JpaRepository<Activity, UUID> {
 
     Page<Activity> findByName(String name, Pageable pageable);
-    Optional<Activity> findByUserId(UUID id);
+    Optional<List<Activity>> findByUserId(UUID id);
     
 }

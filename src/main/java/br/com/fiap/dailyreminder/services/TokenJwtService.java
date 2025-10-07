@@ -14,9 +14,6 @@ import org.springframework.stereotype.Service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 
-import br.com.fiap.dailyreminder.models.Credencial;
-import br.com.fiap.dailyreminder.modules.users.domain.User;
-
 
 @Service
 public class TokenJwtService {

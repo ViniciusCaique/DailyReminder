@@ -1,10 +1,5 @@
 package br.com.fiap.dailyreminder.config;
 
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
-
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.repositories.ActivityRepository;
 import br.com.fiap.dailyreminder.modules.users.infrastructure.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
-import br.com.fiap.dailyreminder.models.Lembrete;
-import br.com.fiap.dailyreminder.modules.users.domain.User;
-
-import br.com.fiap.dailyreminder.repository.NotesRepository;
+import br.com.fiap.dailyreminder.modules.notes.infrastructure.repositories.NotesRepository;
 
 
 @Configuration

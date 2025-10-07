@@ -10,8 +10,7 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.UUID;
 
-import br.com.fiap.dailyreminder.models.Lembrete;
-import br.com.fiap.dailyreminder.modules.users.domain.User;
+import br.com.fiap.dailyreminder.modules.notes.domain.Note;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -40,22 +39,15 @@ public class Activity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @Min(value = 0, message = "Nao existe tempo negativo!") 
-    @NotNull
     private int duration;
-
-    @NotNull
     private LocalDate dataDia;
-
-    @NotBlank @Size(min = 3, max = 255)
     private String name;
 
     @CreationTimestamp
     private Date created_at;
 
     @ManyToOne
-    private Lembrete lembrete;
+    private Note lembrete;
 
     @Column(name = "userId", nullable = false)
     private UUID userId;

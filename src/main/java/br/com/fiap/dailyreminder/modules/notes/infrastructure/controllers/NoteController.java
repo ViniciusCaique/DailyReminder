@@ -1,4 +1,4 @@
-package br.com.fiap.dailyreminder.controllers;
+package br.com.fiap.dailyreminder.modules.notes.infrastructure.controllers;
 
 import java.util.UUID;
 
@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.dailyreminder.exceptions.RestNotFoundException;
-import br.com.fiap.dailyreminder.models.Lembrete;
-import br.com.fiap.dailyreminder.repository.NotesRepository;
+import br.com.fiap.dailyreminder.modules.notes.domain.Note;
+import br.com.fiap.dailyreminder.modules.notes.infrastructure.repositories.NotesRepository;
 import jakarta.validation.Valid;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,77 +33,77 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @SecurityRequirement(name = "bearer-key")
-@Tag(name = "lembretes")
-@RequestMapping("/api/lembretes")
-public class LembreteController {
+@Tag(name = "Notes")
+@RequestMapping("/api/notes")
+public class NoteController {
 
     @Autowired
     NotesRepository notesRepository;
 
     @GetMapping
     @Operation(
-        summary = "Detalhar lembretes.",
-        description = "Endpoint que retorna todos os lembretes." 
+        summary = "Detalhar notas.",
+        description = "Endpoint que retorna todos os notas."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "lembrete retornado com sucesso"),
+        @ApiResponse(responseCode = "200", description = "Nota retornado com sucesso"),
         @ApiResponse(responseCode = "204", description = "sem conteudo"),
         @ApiResponse(responseCode = "400", description = "ma requisicao"),
-        @ApiResponse(responseCode = "404", description = "lembrete com id informado inexistente")
+        @ApiResponse(responseCode = "404", description = "Nota com id informado inexistente")
     })
-    public Page<Lembrete> index(@RequestParam(required = false) String busca, @PageableDefault(size = 5) Pageable pageable){
+    public Page<Note> index(@RequestParam(required = false) String busca, @PageableDefault(size = 5) Pageable pageable){
         return notesRepository.findAll(pageable);
     }
 
     @PostMapping
     @Operation(
-        summary = "Cadastrar lembrete.",
-        description = "Endpoint que recebe os parametros de lembrete e cria os dados de um lembrete." 
+        summary = "Cadastrar nota.",
+        description = "Endpoint que recebe os parametros de nota e cria os dados de um nota."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "lembrete cadastrado com sucesso"),
+        @ApiResponse(responseCode = "201", description = "Nota cadastrado com sucesso"),
         @ApiResponse(responseCode = "400", description = "os campos enviados sao invalidos")
     })
-    public ResponseEntity<Object> create(@RequestBody @Valid Lembrete lembrete){
+    public ResponseEntity<Object> create(@RequestBody @Valid Note lembrete){
 
         notesRepository.save(lembrete);
         return ResponseEntity.status(HttpStatus.CREATED).body(lembrete);
     }
 
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     @Operation(
-        summary = "Detalhar lembrete.",
-        description = "Endpoint que recebe um id e retorna os dados de um lembrete." 
+        summary = "Detalhar nota.",
+        description = "Endpoint que recebe um id e retorna os dados de um nota."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "lembrete retornado com sucesso"),
+        @ApiResponse(responseCode = "200", description = "Nota retornado com sucesso"),
         @ApiResponse(responseCode = "204", description = "sem conteudo"),
-        @ApiResponse(responseCode = "404", description = "lembrete com id informado inexistente")
+        @ApiResponse(responseCode = "404", description = "Nota com id informado inexistente")
     })
-    public ResponseEntity<Lembrete> show(@PathVariable UUID id) {
-        var lembrete = notesRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Lembrete nao encontrada"));
+    public ResponseEntity<Note> show(@PathVariable UUID id) {
+        var lembrete = notesRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Nota nao encontrada"));
         return ResponseEntity.ok(lembrete);
     }
 
-    @PutMapping("{id}")
+    @PutMapping("/{id}")
     @Operation(
-        summary = "Atualizar lembrete.",
-        description = "Endpoint que recebe os parametros de um lembrete e atualiza os dados de um lembrete." 
+        summary = "Atualizar nota.",
+        description = "Endpoint que recebe os parametros de um nota e atualiza os dados de um nota."
     )
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "lembrete atualizado com sucesso"),
-        @ApiResponse(responseCode = "404", description = "nao existe lembrete com o id informado"),
+        @ApiResponse(responseCode = "201", description = "Nota atualizado com sucesso"),
+        @ApiResponse(responseCode = "404", description = "nao existe nota com o id informado"),
         @ApiResponse(responseCode = "406", description = "dado informado errado")
     })
-    public ResponseEntity<Lembrete> update(@PathVariable UUID id, @Valid @RequestBody Lembrete lembrete) {
+    public ResponseEntity<Note> update(@PathVariable UUID id, @Valid @RequestBody Note lembrete) {
 
-        notesRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, lembrete nao encontrada!"));
+        notesRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, nota nao encontrada!"));
         lembrete.setId(id);
         notesRepository.save(lembrete);
         return ResponseEntity.ok(lembrete);
     }
 
-    @DeleteMapping("{id}")
+    @DeleteMapping("/{id}")
     @Operation(
         summary = "Deletar Lembrete.",
         description = "Endpoint que recebe um id e deleta um lembrete." 
@@ -112,7 +112,7 @@ public class LembreteController {
         @ApiResponse(responseCode = "204", description = "sem conteudo/deletado com sucesso"),
         @ApiResponse(responseCode = "404", description = "nao existe lembrete com o id informado")
     })
-    public ResponseEntity<Lembrete> delete(@PathVariable UUID id) {
+    public ResponseEntity<Note> delete(@PathVariable UUID id) {
 
         var lembrete = notesRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, lembrete nao encontrada!"));
         notesRepository.delete(lembrete);

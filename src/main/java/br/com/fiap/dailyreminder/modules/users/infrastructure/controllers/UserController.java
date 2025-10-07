@@ -7,6 +7,7 @@ import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.request.SignI
 import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.response.CreateUserResponse;
 import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.response.SignInUserResponse;
 import br.com.fiap.dailyreminder.modules.users.infrastructure.repositories.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import br.com.fiap.dailyreminder.models.Credencial;
 import br.com.fiap.dailyreminder.modules.users.domain.User;
 
 import br.com.fiap.dailyreminder.services.TokenJwtService;
@@ -42,11 +41,19 @@ public class UserController {
     TokenJwtService tokenJwtService;
 
     @GetMapping
+    @Operation(
+            summary = "Listar usuários",
+            description = "Endpoint que retorna todos os usuários."
+    )
     public List<User> index(){
       return userRepository.findAll();
     }
 
     @PostMapping("/sign-up")
+    @Operation(
+            summary = "Cadastrar usuário",
+            description = "Endpoint que recebe os dados de um usuário."
+    )
     public ResponseEntity<CreateUserResponse> signUp(@RequestBody @Valid CreateUserRequest createUserRequest) {
         User user = new User();
         BeanUtils.copyProperties(createUserRequest, user);
@@ -63,13 +70,16 @@ public class UserController {
 
         var response = new CreateUserResponse(
             savedUser.getName(),
-            savedUser.getEmail(),
-            savedUser.getPassword()
+            savedUser.getEmail()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/sign-in")
+    @Operation(
+            summary = "Logar um usuário",
+            description = "Endpoint que recebe os dados de um usuário."
+    )
     public ResponseEntity<SignInUserResponse> signIn(@RequestBody @Valid SignInUserRequest signInUserRequest) {
 //        manager.authenticate(credencial.toAuthentication());
 

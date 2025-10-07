@@ -3,17 +3,16 @@ package br.com.fiap.dailyreminder.modules.activities.infrastructure.controllers;
 import java.util.List;
 import java.util.UUID;
 
-import br.com.fiap.dailyreminder.config.CurrentUserId;
-import br.com.fiap.dailyreminder.modules.users.domain.User;
-import jakarta.servlet.http.HttpServletRequest;
+import br.com.fiap.dailyreminder.modules.activities.application.usecases.ActivityUseCase;
 import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
+import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.request.CreateActivityRequest;
+import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.response.CreateActivityResponse;
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.repositories.ActivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.dailyreminder.exceptions.RestNotFoundException;
-import br.com.fiap.dailyreminder.repository.NotesRepository;
+import br.com.fiap.dailyreminder.modules.notes.infrastructure.repositories.NotesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -44,6 +43,12 @@ public class ActivityController {
 
     @Autowired
     ActivityRepository activityRepository;
+
+    private final ActivityUseCase activityUseCase;
+
+    public ActivityController(ActivityUseCase activityUseCase) {
+      this.activityUseCase = activityUseCase;
+    }
 
     @Autowired
     NotesRepository notesRepository;
@@ -72,8 +77,49 @@ public class ActivityController {
     // }
 
     @GetMapping
+    @Operation(
+            summary = "Retorna todas as atividades de um usuário.",
+            description = "Endpoint que retorna todas as atividades de um usuário."
+    )
     public List<Activity> index(){
-        return activityRepository.findAll();
+        return activityUseCase.findAll();
+    }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "Retorna todas as atividades de um usuário.",
+            description = "Endpoint que retorna todas as atividades de um usuário."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
+            @ApiResponse(responseCode = "204", description = "sem conteudo"),
+    })
+    public List<Activity> me() {
+      String userId = SecurityContextHolder.getContext()
+              .getAuthentication()
+              .getPrincipal()
+              .toString();
+
+
+      List<Activity> activities = activityUseCase.findAllUserActivies(userId);
+
+      return activities;
+    }
+
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Detalhar atividade.",
+            description = "Endpoint que recebe um id e retorna os dados de uma atividade."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
+            @ApiResponse(responseCode = "204", description = "sem conteudo"),
+            @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
+    })
+    public EntityModel<Activity> show(@PathVariable UUID id) {
+      var activity = activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
+
+      return activity.toEntityModel();
     }
 
     @PostMapping
@@ -85,56 +131,18 @@ public class ActivityController {
         @ApiResponse(responseCode = "201", description = "atividade cadastrada com sucesso"),
         @ApiResponse(responseCode = "400", description = "os campos enviados sao invalidos")
     })
-    public ResponseEntity<Object> create(@RequestBody @Valid Activity atividade){
+    public ResponseEntity<CreateActivityResponse> create(@RequestBody @Valid CreateActivityRequest createActivityRequest){
         String userId = SecurityContextHolder.getContext()
               .getAuthentication()
               .getPrincipal()
               .toString();
 
-        atividade.setUserId(UUID.fromString(userId));
-        activityRepository.save(atividade);
+        var response = activityUseCase.create(userId, createActivityRequest);
+
         // atividade.setLembrete(lembreteRepository.findById(atividade.getLembrete().getId()).get());
-        return ResponseEntity.status(HttpStatus.CREATED).body(atividade);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @GetMapping("/me")
-    @Operation(
-            summary = "Detalhar atividade.",
-            description = "Endpoint que recebe um id e retorna os dados de uma atividade."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
-            @ApiResponse(responseCode = "204", description = "sem conteudo"),
-            @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
-    })
-    public EntityModel<Activity> me() {
-      String userId = SecurityContextHolder.getContext()
-              .getAuthentication()
-              .getPrincipal()
-              .toString();
-
-      System.out.println(userId);
-
-      var activity = activityRepository.findByUserId(UUID.fromString(userId)).orElseThrow(() -> new RestNotFoundException("Nenhuma atividade encontrada para esse usuário"));
-
-      return activity.toEntityModel();
-    }
-
-    @GetMapping("/{id}")
-    @Operation(
-        summary = "Detalhar atividade.",
-        description = "Endpoint que recebe um id e retorna os dados de uma atividade." 
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
-        @ApiResponse(responseCode = "204", description = "sem conteudo"),
-        @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
-    })
-    public EntityModel<Activity> show(@PathVariable UUID id) {
-        var activity = activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
-
-        return activity.toEntityModel();
-    }
 
     @PutMapping("/{id}")
     @Operation(
@@ -146,15 +154,15 @@ public class ActivityController {
         @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado"),
         @ApiResponse(responseCode = "406", description = "dado informado errado")
     })
-    public EntityModel<Activity> update(@PathVariable UUID id, @Valid @RequestBody Activity activity) {
+    public EntityModel<Activity> update(@PathVariable String id, @Valid @RequestBody Activity activity) {
         String userId = SecurityContextHolder.getContext()
               .getAuthentication()
               .getPrincipal()
               .toString();
 
-        activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
+        activityRepository.findById(UUID.fromString(id)).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
 
-        activity.setId(id);
+        activity.setId(UUID.fromString(id));
         activity.setUserId(UUID.fromString(userId));
         activityRepository.save(activity);
         return activity.toEntityModel();
