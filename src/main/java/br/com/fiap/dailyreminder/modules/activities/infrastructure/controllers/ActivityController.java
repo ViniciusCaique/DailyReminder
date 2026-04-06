@@ -6,6 +6,7 @@ import java.util.UUID;
 import br.com.fiap.dailyreminder.modules.activities.application.usecases.ActivityUseCase;
 import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.request.CreateActivityRequest;
+import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.request.UpdateActivityRequest;
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.response.CreateActivityResponse;
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.repositories.ActivityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,17 +15,9 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import br.com.fiap.dailyreminder.exceptions.RestNotFoundException;
-import br.com.fiap.dailyreminder.modules.notes.infrastructure.repositories.NotesRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -41,17 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/activities/")
 public class ActivityController {
 
-    @Autowired
-    ActivityRepository activityRepository;
-
+    private final ActivityRepository activityRepository;
     private final ActivityUseCase activityUseCase;
 
-    public ActivityController(ActivityUseCase activityUseCase) {
+    public ActivityController(
+            ActivityUseCase activityUseCase,
+            ActivityRepository activityRepository
+    ) {
       this.activityUseCase = activityUseCase;
+      this.activityRepository = activityRepository;
     }
-
-    @Autowired
-    NotesRepository notesRepository;
 
     @Autowired
     PagedResourcesAssembler<Object> assembler;
@@ -78,8 +70,8 @@ public class ActivityController {
 
     @GetMapping
     @Operation(
-            summary = "Retorna todas as atividades de um usuário.",
-            description = "Endpoint que retorna todas as atividades de um usuário."
+            summary = "Retorna todas as atividades de todos os usuários.",
+            description = "Endpoint que retorna todas as atividades de todos os usuários."
     )
     public List<Activity> index(){
         return activityUseCase.findAll();
@@ -144,7 +136,7 @@ public class ActivityController {
     }
 
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Operation(
         summary = "Atualizar atividade.",
         description = "Endpoint que recebe os parametros de atividade e atualiza os dados de uma atividade." 
@@ -154,18 +146,33 @@ public class ActivityController {
         @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado"),
         @ApiResponse(responseCode = "406", description = "dado informado errado")
     })
-    public EntityModel<Activity> update(@PathVariable String id, @Valid @RequestBody Activity activity) {
+    public EntityModel<Activity> update(@PathVariable String id, @Valid @RequestBody UpdateActivityRequest updateActivityRequest) {
         String userId = SecurityContextHolder.getContext()
               .getAuthentication()
               .getPrincipal()
               .toString();
 
-        activityRepository.findById(UUID.fromString(id)).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
+        var existingActivity = activityRepository.findById(UUID.fromString(id)).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
 
-        activity.setId(UUID.fromString(id));
-        activity.setUserId(UUID.fromString(userId));
-        activityRepository.save(activity);
-        return activity.toEntityModel();
+        if (updateActivityRequest.duration() != null) {
+          existingActivity.setDuration(updateActivityRequest.duration());
+        }
+
+        if (updateActivityRequest.name() != null) {
+          existingActivity.setName(updateActivityRequest.name());
+        }
+
+        if (updateActivityRequest.dataDia() != null) {
+          existingActivity.setDataDia(updateActivityRequest.dataDia());
+        }
+
+        if (updateActivityRequest.note() != null) {
+          existingActivity.setLembrete(updateActivityRequest.note());
+        }
+
+        existingActivity.setUserId(UUID.fromString(userId));
+        activityRepository.save(existingActivity);
+        return existingActivity.toEntityModel();
     }
 
     @DeleteMapping("/{id}")
