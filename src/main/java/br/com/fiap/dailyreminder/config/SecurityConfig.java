@@ -36,7 +36,8 @@ public class SecurityConfig {
                 .requestMatchers("/scalar/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/sign-up").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/auth").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll();
+                .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll();
 
                 auth.anyRequest().authenticated();
           })

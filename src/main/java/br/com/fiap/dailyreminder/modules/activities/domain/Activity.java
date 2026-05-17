@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import br.com.fiap.dailyreminder.modules.notes.domain.Note;
+import br.com.fiap.dailyreminder.modules.users.domain.User;
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -46,11 +47,16 @@ public class Activity implements Serializable {
     @CreationTimestamp
     private Date created_at;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
     private Note lembrete;
 
-    @Column(name = "userId", nullable = false)
-    private UUID userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
+    private User user;
+
+//    @Column(name = "userId", nullable = false)
+//    private UUID userId;
 
 
     public EntityModel<Activity> toEntityModel(){
