@@ -3,7 +3,7 @@ package br.com.fiap.dailyreminder.modules.users.application;
 import br.com.fiap.dailyreminder.modules.users.domain.User;
 import br.com.fiap.dailyreminder.modules.users.domain.UserToken;
 import br.com.fiap.dailyreminder.modules.users.infrastructure.repositories.UserTokenRepository;
-import br.com.fiap.dailyreminder.services.TokenJwtService;
+import br.com.fiap.dailyreminder.modules.users.application.TokenJwtService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

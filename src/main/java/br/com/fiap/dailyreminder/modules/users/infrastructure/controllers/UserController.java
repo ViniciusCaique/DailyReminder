@@ -1,151 +1,30 @@
 package br.com.fiap.dailyreminder.modules.users.infrastructure.controllers;
 
-import br.com.fiap.dailyreminder.exceptions.EmailAlreadyRegistered;
-import br.com.fiap.dailyreminder.exceptions.InvalidCredentials;
-import br.com.fiap.dailyreminder.modules.users.application.SaveRefreshTokenUseCase;
-import br.com.fiap.dailyreminder.modules.users.domain.User;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.request.CreateUserRequest;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.request.RefreshTokenRequest;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.request.SignInUserRequest;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.response.CreateUserResponse;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.response.RefreshTokenResponse;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.response.SignInUserResponse;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.repositories.UserRepository;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.repositories.UserTokenRepository;
-import br.com.fiap.dailyreminder.services.TokenJwtService;
-import com.auth0.jwt.exceptions.JWTVerificationException;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import br.com.fiap.dailyreminder.modules.users.application.IdentityService;
+import br.com.fiap.dailyreminder.modules.users.infrastructure.dtos.request.*;
+import br.com.fiap.dailyreminder.shared.CurrentUser;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.constraints.*;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
-@Tag(name = "Auth")
 @RequestMapping("/api/auth")
 public class UserController {
-
-    private final UserRepository userRepository;
-    private final TokenJwtService tokenJwtService;
-    private final UserTokenRepository userTokenRepository;
-    private final PasswordEncoder encoder;
-    private final SaveRefreshTokenUseCase saveRefreshTokenUseCase;
-
-    public UserController(
-            UserRepository userRepository,
-            UserTokenRepository userTokenRepository,
-            TokenJwtService tokenJwtService,
-            SaveRefreshTokenUseCase saveRefreshTokenUseCase,
-            PasswordEncoder passwordEncoder
-    ) {
-      this.userRepository = userRepository;
-      this.userTokenRepository = userTokenRepository;
-      this.tokenJwtService = tokenJwtService;
-      this.saveRefreshTokenUseCase = saveRefreshTokenUseCase;
-      this.encoder = passwordEncoder;
-    }
-
-    @GetMapping
-    @Operation(
-            summary = "Listar usuarios",
-            description = "Endpoint que retorna todos os usuarios."
-    )
-    public List<User> index(){
-      return userRepository.findAll();
-    }
-
-    @PostMapping("/sign-up")
-    @Operation(
-            summary = "Cadastrar usuario",
-            description = "Endpoint que recebe os dados de um usuario."
-    )
-    public ResponseEntity<CreateUserResponse> signUp(@RequestBody @Valid CreateUserRequest createUserRequest) {
-        User user = new User();
-        BeanUtils.copyProperties(createUserRequest, user);
-
-        var existingEmail = userRepository.findByEmail(user.getEmail());
-
-        if (existingEmail.isPresent()) {
-          throw new EmailAlreadyRegistered("Email already registered");
-        }
-
-        user.setPassword(encoder.encode(user.getPassword()));
-
-        User savedUser = userRepository.save(user);
-
-        var response = new CreateUserResponse(
-            savedUser.getName(),
-            savedUser.getEmail()
-        );
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @PostMapping("/sign-in")
-    @Operation(
-            summary = "Logar um usuario",
-            description = "Endpoint que recebe os dados de um usuario."
-    )
-    public ResponseEntity<SignInUserResponse> signIn(@RequestBody @Valid SignInUserRequest signInUserRequest) {
-        User user = new User();
-        BeanUtils.copyProperties(signInUserRequest, user);
-
-        var existingUser = userRepository.findByEmail(user.getEmail()).orElseThrow(() -> new InvalidCredentials("Email or password may be incorrect"));
-
-        var passwordMatches = encoder.matches(user.getPassword(), existingUser.getPassword());
-
-        if (!passwordMatches) {
-          throw new InvalidCredentials("Email or password may be incorrect");
-        }
-
-        var token = tokenJwtService.generateToken(existingUser.getId());
-        var refreshToken = tokenJwtService.generateRefreshToken(existingUser.getId());
-        saveRefreshTokenUseCase.execute(existingUser, refreshToken.token(), refreshToken.expiresAt());
-
-        var response = new SignInUserResponse(token.token(), refreshToken.token());
-
-        return ResponseEntity.status(200).body(response);
-    }
-
-    @PostMapping("/refresh")
-    @Operation(
-            summary = "Atualizar token",
-            description = "Endpoint que recebe um refresh token valido e retorna novos tokens."
-    )
-    public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest) {
-      try {
-        var requestRefreshToken = refreshTokenRequest.refreshToken();
-        var decodedRefreshToken = tokenJwtService.validate(requestRefreshToken);
-        var tokenHash = tokenJwtService.hashToken(requestRefreshToken);
-        var storedRefreshToken = userTokenRepository.findByTokenHashAndValidTrue(tokenHash)
-                .orElseThrow(() -> new InvalidCredentials("Invalid refresh token"));
-        var userId = UUID.fromString(decodedRefreshToken.getSubject());
-
-        if (!storedRefreshToken.getUser().getId().equals(userId)) {
-          throw new InvalidCredentials("Invalid refresh token");
-        }
-
-        storedRefreshToken.setValid(false);
-        userTokenRepository.save(storedRefreshToken);
-
-        var token = tokenJwtService.generateToken(userId);
-        var refreshToken = tokenJwtService.generateRefreshToken(userId);
-        saveRefreshTokenUseCase.execute(storedRefreshToken.getUser(), refreshToken.token(), refreshToken.expiresAt());
-
-        var response = new RefreshTokenResponse(token.token(), refreshToken.token());
-
-        return ResponseEntity.status(200).body(response);
-      } catch (JWTVerificationException | IllegalArgumentException exception) {
-        throw new InvalidCredentials("Invalid refresh token");
-      }
-    }
+    private final IdentityService identity;
+    public UserController(IdentityService identity) { this.identity = identity; }
+    public record ProfileRequest(@NotBlank @Size(max = 255) String name) {}
+    @PatchMapping("/profile") public IdentityService.Profile updateProfile(@Valid @RequestBody ProfileRequest request) { return identity.updateProfile(CurrentUser.id(), request.name()); }
+    public record EmailRequest(@NotBlank @Email String email) {}
+    public record TokenRequest(@NotBlank String token) {}
+    public record ResetRequest(@NotBlank String token, @NotBlank @Size(min = 8, max = 72) String password) {}
+    @GetMapping public List<IdentityService.Profile> index() { return List.of(identity.profile(CurrentUser.id())); }
+    @PostMapping("/sign-up") public ResponseEntity<IdentityService.Profile> signUp(@Valid @RequestBody CreateUserRequest request) { return ResponseEntity.status(201).body(identity.register(request.name(), request.email(), request.password())); }
+    @PostMapping("/sign-in") public IdentityService.Tokens signIn(@Valid @RequestBody SignInUserRequest request) { return identity.signIn(request.email(), request.password()); }
+    @PostMapping("/refresh") public IdentityService.Tokens refresh(@Valid @RequestBody RefreshTokenRequest request) { return identity.refresh(request.refreshToken()); }
+    @PostMapping("/forgot-password") public ResponseEntity<Void> forgot(@Valid @RequestBody EmailRequest request) { identity.requestReset(request.email()); return ResponseEntity.accepted().build(); }
+    @PostMapping("/request-verification") public ResponseEntity<Void> requestVerification(@Valid @RequestBody EmailRequest request) { identity.requestVerification(request.email()); return ResponseEntity.accepted().build(); }
+    @PostMapping("/reset-password") public ResponseEntity<Void> reset(@Valid @RequestBody ResetRequest request) { identity.reset(request.token(), request.password()); return ResponseEntity.noContent().build(); }
+    @PostMapping("/verify-email") public ResponseEntity<Void> verify(@Valid @RequestBody TokenRequest request) { identity.verify(request.token()); return ResponseEntity.noContent().build(); }
 }

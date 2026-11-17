@@ -1,202 +1,33 @@
 package br.com.fiap.dailyreminder.modules.activities.infrastructure.controllers;
 
-import java.util.List;
-import java.util.UUID;
-
+import br.com.fiap.dailyreminder.modules.activities.application.ActivityDetails;
 import br.com.fiap.dailyreminder.modules.activities.application.usecases.ActivityUseCase;
-import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.request.CreateActivityRequest;
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.request.UpdateActivityRequest;
 import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.response.ActivityResponse;
-import br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.response.CreateActivityResponse;
-import br.com.fiap.dailyreminder.modules.activities.infrastructure.repositories.ActivityRepository;
-import br.com.fiap.dailyreminder.modules.users.infrastructure.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.web.PagedResourcesAssembler;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
-
-import br.com.fiap.dailyreminder.exceptions.RestNotFoundException;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import br.com.fiap.dailyreminder.shared.CurrentUser;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
-@Slf4j
-@SecurityRequirement(name = "bearer-key")
 @Tag(name = "Activities")
-@RequestMapping("/api/activities/")
+@SecurityRequirement(name = "bearer-key")
+@RequestMapping("/api/activities")
 public class ActivityController {
-
-    private final ActivityRepository activityRepository;
-    private final ActivityUseCase activityUseCase;
-    private final UserRepository userRepository;
-
-    public ActivityController(
-            ActivityUseCase activityUseCase,
-            ActivityRepository activityRepository,
-            UserRepository userRepository
-    ) {
-      this.activityUseCase = activityUseCase;
-      this.activityRepository = activityRepository;
-      this.userRepository = userRepository;
+    private final ActivityUseCase activities;
+    public ActivityController(ActivityUseCase activities) { this.activities = activities; }
+    @GetMapping({"", "/", "/me"}) public List<ActivityResponse> index() { return activities.list(CurrentUser.id()).stream().map(ActivityResponse::from).toList(); }
+    @GetMapping("/{id}") public ActivityResponse show(@PathVariable UUID id) { return ActivityResponse.from(activities.owned(id, CurrentUser.id())); }
+    @PostMapping({"", "/"}) public ResponseEntity<ActivityResponse> create(@Valid @RequestBody CreateActivityRequest request) {
+        return ResponseEntity.status(201).body(ActivityResponse.from(activities.create(CurrentUser.id(), request.name(), request.duration(), request.dataDia(), request.noteId(), request.description(), request.status(), request.dueDate(), new ActivityDetails(request.projectId(), false, request.labelIds(), request.checklist() == null ? null : request.checklist().stream().map(item -> item.change()).toList(), null))));
     }
-
-    @Autowired
-    PagedResourcesAssembler<Object> assembler;
-
-    // @GetMapping
-    // @Operation(
-    //     summary = "Detalhar atividades.",
-    //     description = "Endpoint que retorna todas as atividades ou uma lista especifica baseado na busca." 
-    // )
-    // @ApiResponses({
-    //     @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
-    //     @ApiResponse(responseCode = "204", description = "sem conteudo"),
-    //     @ApiResponse(responseCode = "400", description = "ma requisicao"),
-    //     @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
-    // })
-    // public PagedModel<EntityModel<Object>> index(@RequestParam(required = false) String busca, @ParameterObject @PageableDefault(size = 10) Pageable pageable){
-
-    //     Page<Atividade> atividades = (busca == null) ? 
-    //         atividadeRepository.findAll(pageable) : 
-    //         atividadeRepository.findByAtividadeContaining(busca, pageable);
-  
-    //     return assembler.toModel(atividades.map(Atividade::toEntityModel));
-    // }
-
-    @GetMapping
-    @Operation(
-            summary = "Retorna todas as atividades de todos os usuários.",
-            description = "Endpoint que retorna todas as atividades de todos os usuários."
-    )
-    public List<ActivityResponse> index(){
-        return activityUseCase.findAll();
+    @PatchMapping("/{id}") public ActivityResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateActivityRequest request) {
+        return ActivityResponse.from(activities.update(id, CurrentUser.id(), request.name(), request.duration(), request.dataDia(), request.noteId(), Boolean.TRUE.equals(request.clearReminder()), request.completed(), request.description(), request.status(), request.dueDate(), Boolean.TRUE.equals(request.clearDuration()), Boolean.TRUE.equals(request.clearScheduledDate()), Boolean.TRUE.equals(request.clearDueDate()), new ActivityDetails(request.projectId(), Boolean.TRUE.equals(request.clearProject()), request.labelIds(), request.checklist() == null ? null : request.checklist().stream().map(item -> item.change()).toList(), request.version())));
     }
-
-    @GetMapping("/me")
-    @Operation(
-            summary = "Retorna todas as atividades de um usuário.",
-            description = "Endpoint que retorna todas as atividades de um usuário."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
-            @ApiResponse(responseCode = "204", description = "sem conteudo"),
-    })
-    public List<ActivityResponse> me() {
-      String userId = SecurityContextHolder.getContext()
-              .getAuthentication()
-              .getPrincipal()
-              .toString();
-
-
-      List<ActivityResponse> activities = activityUseCase.findAllUserActivies(userId);
-
-      return activities;
-    }
-
-    @GetMapping("/{id}")
-    @Operation(
-            summary = "Detalhar atividade.",
-            description = "Endpoint que recebe um id e retorna os dados de uma atividade."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "atividade retornada com sucesso"),
-            @ApiResponse(responseCode = "204", description = "sem conteudo"),
-            @ApiResponse(responseCode = "404", description = "atividade com id informado inexistente")
-    })
-    public ActivityResponse show(@PathVariable UUID id) {
-      return activityRepository.findResponseById(id)
-              .orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
-    }
-
-    @PostMapping
-    @Operation(
-        summary = "Cadastrar atividade.",
-        description = "Endpoint que recebe os parametros de atividade e cria os dados de uma atividade." 
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "atividade cadastrada com sucesso"),
-        @ApiResponse(responseCode = "400", description = "os campos enviados sao invalidos")
-    })
-    public ResponseEntity<CreateActivityResponse> create(@RequestBody @Valid CreateActivityRequest createActivityRequest){
-        String userId = SecurityContextHolder.getContext()
-              .getAuthentication()
-              .getPrincipal()
-              .toString();
-
-        var response = activityUseCase.create(userId, createActivityRequest);
-
-        // atividade.setLembrete(lembreteRepository.findById(atividade.getLembrete().getId()).get());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-
-    @PatchMapping("/{id}")
-    @Operation(
-        summary = "Atualizar atividade.",
-        description = "Endpoint que recebe os parametros de atividade e atualiza os dados de uma atividade." 
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "atividade atualizada com sucesso"),
-        @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado"),
-        @ApiResponse(responseCode = "406", description = "dado informado errado")
-    })
-    public ActivityResponse update(@PathVariable String id, @Valid @RequestBody UpdateActivityRequest updateActivityRequest) {
-        String userId = SecurityContextHolder.getContext()
-              .getAuthentication()
-              .getPrincipal()
-              .toString();
-
-        var existingActivity = activityRepository.findById(UUID.fromString(id)).orElseThrow(() -> new RestNotFoundException("Erro ao alterar, atividade nao encontrada!"));
-
-        if (updateActivityRequest.duration() != null) {
-          existingActivity.setDuration(updateActivityRequest.duration());
-        }
-
-        if (updateActivityRequest.name() != null) {
-          existingActivity.setName(updateActivityRequest.name());
-        }
-
-        if (updateActivityRequest.dataDia() != null) {
-          existingActivity.setDataDia(updateActivityRequest.dataDia());
-        }
-
-        if (updateActivityRequest.note() != null) {
-          existingActivity.setLembrete(updateActivityRequest.note());
-        }
-
-        existingActivity.setUser(userRepository.getReferenceById(UUID.fromString(userId)));
-        var savedActivity = activityRepository.save(existingActivity);
-
-        return activityRepository.findResponseById(savedActivity.getId())
-                .orElseThrow(() -> new RestNotFoundException("Atividade nao encontrada"));
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(
-        summary = "Deletar atividade.",
-        description = "Endpoint que recebe um id e deleta uma atividade." 
-    )
-    @ApiResponses({
-        @ApiResponse(responseCode = "204", description = "sem conteudo/deletada com sucesso"),
-        @ApiResponse(responseCode = "404", description = "nao existe atividade com o id informado")
-    })
-    public ResponseEntity<Activity> delete(@PathVariable UUID id) {
-        String userId = SecurityContextHolder.getContext()
-              .getAuthentication()
-              .getPrincipal()
-              .toString();
-
-        var activity = activityRepository.findById(id).orElseThrow(() -> new RestNotFoundException("Erro ao apagar, atividade nao encontrada!"));
-        activityRepository.delete(activity);
-        return ResponseEntity.noContent().build();
-    }
+    @DeleteMapping("/{id}") public ResponseEntity<Void> delete(@PathVariable UUID id) { activities.delete(id, CurrentUser.id()); return ResponseEntity.noContent().build(); }
 }

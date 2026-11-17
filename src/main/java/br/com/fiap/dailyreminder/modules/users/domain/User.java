@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import br.com.fiap.dailyreminder.modules.activities.domain.Activity;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,39 +34,6 @@ public class User implements Serializable {
     private LocalDateTime updated_at;
 
 
-    //    @Override
-//    public Collection<? extends GrantedAuthority> getAuthorities() {
-//        return List.of(() -> "ROLE_USUARIO");
-//    }
-//
-//    @Override
-//    public String getPassword() {
-//        return senha;
-//    }
-//
-//    @Override
-//    public String getUsername() {
-//        return email;
-//    }
-//
-//    @Override
-//    public boolean isAccountNonExpired() {
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean isAccountNonLocked() {
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean isCredentialsNonExpired() {
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean isEnabled() {
-//        return true;
-//    }
-    
+    private boolean emailVerified;
+    private int credentialVersion;
 }

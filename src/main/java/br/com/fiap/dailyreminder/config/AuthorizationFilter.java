@@ -1,5 +1,8 @@
 package br.com.fiap.dailyreminder.config;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.auth0.jwt.exceptions.JWTVerificationException;
+
 import java.io.IOException;
 import java.util.Collections;
 
@@ -9,7 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import br.com.fiap.dailyreminder.services.TokenJwtService;
+import br.com.fiap.dailyreminder.modules.users.application.TokenJwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +34,13 @@ public class AuthorizationFilter extends OncePerRequestFilter {
       var token = getTokenFromHeader(request);
 
       if (token != null) {
-        var decodedToken = tokenJwtService.validate(token);
+        DecodedJWT decodedToken;
+        try {
+          decodedToken = tokenJwtService.validateAccess(token);
+        } catch (JWTVerificationException | IllegalArgumentException exception) {
+          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+          return;
+        }
 
         if (decodedToken == null) {
           response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

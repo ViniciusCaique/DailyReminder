@@ -1,4 +1,5 @@
-package br.com.fiap.dailyreminder.services;
+package br.com.fiap.dailyreminder.modules.users.application;
+import br.com.fiap.dailyreminder.services.JwtToken;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -26,6 +27,7 @@ public class TokenJwtService {
 
     @Autowired
     UserRepository userRepository;
+    @Value("${app.auth.require-verification:false}") boolean requireVerification;
 
     public JwtToken generateToken(UUID id) {
 
@@ -34,6 +36,8 @@ public class TokenJwtService {
 
         var token = JWT.create()
                     .withExpiresAt(expiresAt)
+                    .withClaim("type", "access")
+                    .withClaim("version", userRepository.findById(id).orElseThrow().getCredentialVersion())
                     .withSubject(id.toString())
                     .withIssuer("Daily")
                     .sign(alg);
@@ -48,6 +52,8 @@ public class TokenJwtService {
 
       var token = JWT.create()
               .withExpiresAt(expiresAt)
+              .withJWTId(UUID.randomUUID().toString())
+              .withClaim("type", "refresh")
               .withSubject(id.toString())
               .withIssuer("Daily")
               .sign(alg);
@@ -56,14 +62,16 @@ public class TokenJwtService {
     }
 
 
-  public DecodedJWT validate(String token) {
+    public DecodedJWT validateAccess(String token) {
+      var decoded = JWT.require(Algorithm.HMAC256(secret)).withIssuer("Daily").withClaim("type", "access").build().verify(token);
+      var user = userRepository.findById(UUID.fromString(decoded.getSubject())).orElseThrow(() -> new com.auth0.jwt.exceptions.JWTVerificationException("Invalid session"));
+      if (requireVerification && !user.isEmailVerified()) throw new com.auth0.jwt.exceptions.JWTVerificationException("Email verification required");
+      if (!java.util.Objects.equals(decoded.getClaim("version").asInt(), user.getCredentialVersion())) throw new com.auth0.jwt.exceptions.JWTVerificationException("Invalid session");
+      return decoded;
+    }
 
-      Algorithm alg = Algorithm.HMAC256(secret);
-
-      return JWT.require(alg)
-                  .withIssuer("Daily")
-                  .build()
-                  .verify(token);
+    public DecodedJWT validateRefresh(String token) {
+      return JWT.require(Algorithm.HMAC256(secret)).withIssuer("Daily").withClaim("type", "refresh").build().verify(token);
     }
 
     public String hashToken(String token) {

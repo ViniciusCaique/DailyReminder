@@ -35,13 +35,14 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui.html").permitAll()
                 .requestMatchers("/scalar/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/sign-up").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/auth").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/sign-in").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll();
+                .requestMatchers(HttpMethod.POST, "/api/auth/refresh", "/api/auth/forgot-password", "/api/auth/reset-password", "/api/auth/verify-email", "/api/auth/request-verification").permitAll();
 
                 auth.anyRequest().authenticated();
           })
           .csrf(AbstractHttpConfigurer::disable)
+          .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          .exceptionHandling(errors -> errors.authenticationEntryPoint((request, response, exception) -> response.setStatus(401)))
           .addFilterBefore(authorizationFilter, BasicAuthenticationFilter.class);
 
 

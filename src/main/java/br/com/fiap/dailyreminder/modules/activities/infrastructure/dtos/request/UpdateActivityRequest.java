@@ -1,17 +1,17 @@
 package br.com.fiap.dailyreminder.modules.activities.infrastructure.dtos.request;
-
-import br.com.fiap.dailyreminder.modules.notes.domain.Note;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-
+import br.com.fiap.dailyreminder.modules.activities.domain.ActivityStatus;
+import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
+import java.util.List;
 import java.time.LocalDate;
-
+import java.util.UUID;
 public record UpdateActivityRequest(
-        @Min(value = 0, message = "Nao existe tempo negativo!") Integer duration,
-        LocalDate dataDia,
-        @Size(min = 3, max = 255) String name,
-        Note note
-) {
-}
+    @Min(1) @Max(1440) Integer duration,
+    LocalDate dataDia,
+    @Size(min = 3, max = 255) @Pattern(regexp = ".*\\S.*", message = "Name must not be blank") String name,
+    UUID noteId, Boolean clearReminder, Boolean completed,
+    @Size(max = 10000) String description, ActivityStatus status, LocalDate dueDate,
+    Boolean clearDuration, Boolean clearScheduledDate, Boolean clearDueDate,
+    UUID projectId, Boolean clearProject, @Size(max = 20) List<@NotNull UUID> labelIds,
+    @Size(max = 100) List<@NotNull @Valid ChecklistItemRequest> checklist, @PositiveOrZero Long version
+) {}
